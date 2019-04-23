@@ -28,15 +28,32 @@ available actions.
 """
 
 from pkg_resources import iter_entry_points
-from Zope2.Startup import zopectl
-
+from time import sleep
+from waitress.wasyncore import dispatcher
+from ZConfig.loader import SchemaLoader
+from zdaemon.zdctl import ZDCmd, ZDCtlOptions
+from zdaemon.zdoptions import ZDOptions
+from Zope2.Startup.options import ConditionalSchemaParser
 import csv
 import os
 import os.path
+import pkg_resources
+import six
+import socket
 import sys
+import xml.sax
+import waitress
+import zdaemon
 
 
-if zopectl.WIN:
+if sys.version_info > (3, ):
+    basestring = str
+
+WINDOWS = False
+if sys.platform[:3].lower() == "win":
+    WINDOWS = True
+
+if WINDOWS:
     import traceback
     from pkg_resources import resource_filename
     import pywintypes
@@ -51,9 +68,133 @@ if zopectl.WIN:
         'or you have not run the shell as Administrator.')
 
 
-class AdjustedZopeCmd(zopectl.ZopeCmd):
+class ZopeCtlOptions(ZDCtlOptions):
+    # Zope controller options.
+    #
+    # After initialization, this should look very much like a
+    # zdaemon.zdctl.ZDCtlOptions instance.  Many of the attributes are
+    # initialized from different sources, however.
 
-    if zopectl.WIN:
+    # Provide help message, without indentation.
+    __doc__ = __doc__
+
+    positional_args_allowed = True
+
+    # this indicates that no explicit program has been provided.
+    # the command line option can set this.
+    program = None
+
+    # this indicates that no explicit socket name has been provided.
+    # the command line option can set this.
+    sockname = None
+
+    # XXX Suppress using Zope's <eventlog> section to avoid using the
+    # same logging for zdctl as for the Zope appserver.  There still
+    # needs to be a way to set a logfile for zdctl.
+    logsectionname = None
+
+    def __init__(self):
+        # Can't use super because our base class is a old-style class
+        # in Python 2
+        self.ZopeOptions = self.__class__.__bases__[-1]
+        self.ZopeOptions.__init__(self)
+        ZDCtlOptions.__init__(self)
+        self.add("interactive", None, "i", "interactive", flag=1)
+        self.add("default_to_interactive", "runner.default_to_interactive",
+                 default=1)
+
+    def realize(self, *args, **kw):
+        self.ZopeOptions.realize(self, *args, **kw)
+        # Additional checking of user option; set uid and gid
+        if self.user is not None:
+            import pwd
+            try:
+                uid = int(self.user)
+            except ValueError:
+                try:
+                    pwrec = pwd.getpwnam(self.user)
+                except KeyError:
+                    self.usage("username %r not found" % self.user)
+                uid = pwrec[2]
+            else:
+                try:
+                    pwrec = pwd.getpwuid(uid)
+                except KeyError:
+                    self.usage("uid %r not found" % self.user)
+            gid = pwrec[3]
+            self.uid = uid
+            self.gid = gid
+
+        config = self.configroot
+        self.directory = config.instancehome
+        self.clienthome = config.clienthome
+        if self.program:
+            if isinstance(self.program, basestring):
+                self.program = [self.program]
+        elif config.runner and config.runner.program:
+            self.program = config.runner.program
+        else:
+            self.program = [os.path.join(self.directory, "bin", "runzope")]
+        if '-s' in args:
+            # set by command line option
+            # or by zdaemon.zdoptions - we need
+            # to override the latter case
+            pass
+        elif config.runner and config.runner.socket_name:
+            self.sockname = config.runner.socket_name
+        else:
+            self.sockname = os.path.join(self.clienthome, "zopectlsock")
+        self.python = os.environ.get('PYTHON', config.python) or sys.executable
+        self.zdrun = os.path.join(os.path.dirname(zdaemon.__file__),
+                                  "zdrun.py")
+
+        self.exitcodes = [0, 2]
+
+    def load_schema(self):
+        if self.schema is None:
+            # Load schema
+            if self.schemadir is None:
+                self.schemadir = os.path.dirname(__file__)
+            self.schemafile = os.path.join(self.schemadir, self.schemafile)
+            self._conditional_load()
+
+    def _conditional_load(self):
+        loader = SchemaLoader()
+        # loadURL
+        url = loader.normalizeURL(self.schemafile)
+        resource = loader.openResource(url)
+        try:
+            # load / parseResource without caching
+            parser = ConditionalSchemaParser(loader, resource.url)
+            xml.sax.parse(resource.file, parser)
+            self.schema = parser._schema
+        finally:
+            resource.close()
+
+
+try:
+    import ZServer  # noqa
+    HAS_ZSERVER = True
+except ImportError:
+    HAS_ZSERVER = False
+else:
+    from ZServer.Zope2.Startup.options import ZopeOptions
+
+    class ZServerCtlOptions(ZopeCtlOptions, ZopeOptions):
+        schemadir = ZopeOptions.schemadir
+        schemafile = ZopeOptions.schemafile
+
+
+class WSGICtlOptions(ZopeCtlOptions, ZDOptions):
+    schemadir = os.path.dirname(os.path.abspath(__file__))
+    schemafile = 'wsgischema.xml'
+
+
+class ZopeCmd(ZDCmd):
+
+    _exitstatus = 0
+
+    if WINDOWS:
 
         # printable representations of the Windows service states
         service_state_map = {
@@ -204,10 +345,14 @@ class AdjustedZopeCmd(zopectl.ZopeCmd):
             return ret_code
 
         def help_install(self):
-            print('install -- Install Zope as a Windows service that must be '
-                  'manually started.')
-            print('install auto -- Install Zope as a Windows service that '
-                  'starts at system startup.')
+            print(
+                'install -- Install Zope as a Windows service that must be '
+                'manually started.'
+            )
+            print(
+                'install auto -- Install Zope as a Windows service that '
+                'starts at system startup.'
+            )
 
         def do_start(self, arg):
 
@@ -283,8 +428,10 @@ class AdjustedZopeCmd(zopectl.ZopeCmd):
                 print('ERROR: Zope is not installed as a Windows service.')
                 return
             elif status is not win32service.SERVICE_STOPPED:
-                print('ERROR: Please stop the Windows service before '
-                      'removing it.')
+                print(
+                    'ERROR: Please stop the Windows service before '
+                    'removing it.'
+                )
                 return
 
             ret_code = 0
@@ -310,8 +457,8 @@ class AdjustedZopeCmd(zopectl.ZopeCmd):
             - Set "self.zd_up" to 1 or 0 (unclear what this is used for)
 
             """
-            zopectl.ZopeCmd.get_status(self)
-            # override value set by zopectl.ZopeCmd.get_status()
+            ZDCmd.get_status(self)
+            # override value set by ZDCmd.get_status()
             # (always -1 or 0)
             self.zd_pid = self._get_pid_from_pidfile()
 
@@ -348,8 +495,28 @@ class AdjustedZopeCmd(zopectl.ZopeCmd):
         def help_EOF(self):
             print('To quit, type CTRL+Z or use the quit command.')
 
-    # end of "if zopectl.WIN"
+    # end of "if WINDOWS"
     else:
+
+        def _get_override(self, opt, name, svalue=None, flag=0):
+            # Suppress the config file, and pass all configuration via the
+            # command line.  This avoids needing to specialize the zdrun
+            # script.
+            if name == "configfile":
+                return []
+            value = getattr(self.options, name)
+            if value is None:
+                return []
+            if flag:
+                if value:
+                    args = [opt]
+                else:
+                    args = []
+            else:
+                if svalue is None:
+                    svalue = str(value)
+                args = [opt, svalue]
+            return args
 
         def do_start(self, arg):
             self.get_status()
@@ -398,6 +565,69 @@ class AdjustedZopeCmd(zopectl.ZopeCmd):
                 'daemon process started, pid=%(zd_pid)d'
             )
 
+    def __getattr__(self, name):
+        """
+        Getter to check if an unknown command is implement by an entry point.
+        """
+        if not name.startswith("do_"):
+            raise AttributeError(name)
+        data = list(pkg_resources.iter_entry_points(
+            "zopectl.command", name=name[3:]))
+        if not data:
+            raise AttributeError(name)
+        if len(data) > 1:
+            sys.stderr.write(
+                "Warning: multiple entry points found for command")
+            return
+        func = data[0].load()
+        if not callable(func):
+            sys.stderr.write("Error: %s is not a callable method" % name)
+            return
+
+        return self.run_entrypoint(data[0])
+
+    def run_entrypoint(self, entry_point):
+        def go(arg):
+            # If the command line was something like
+            # """bin/instance run "one two" three"""
+            # cmd.parseline will have converted it so
+            # that arg == 'one two three'. This is going to
+            # foul up any quoted command with embedded spaces.
+            # So we have to return to self.options.args,
+            # which is a tuple of command line args,
+            # throwing away the "run" command at the beginning.
+            #
+            # Further complications: if self.options.args has come
+            # via subprocess, it may look like
+            # ['run "arg 1" "arg2"'] rather than ['run','arg 1','arg2'].
+            # If that's the case, we'll use csv to do the parsing
+            # so that we can split on spaces while respecting quotes.
+            tup = self.options.args
+            if len(tup) == 1:
+                tup = next(csv.reader(tup, delimiter=' '))
+
+            # Remove -c and add command name as sys.argv[0]
+            cmd = ['import sys',
+                   'sys.argv.pop()',
+                   'sys.argv.append(r\'%s\')' % entry_point.name
+                   ]
+            if len(tup) > 1:
+                argv = tup[1:]
+                for a in argv:
+                    cmd.append('sys.argv.append(r\'%s\')' % a)
+            cmd.extend([
+                'import pkg_resources',
+                'import Zope2',
+                'func=pkg_resources.EntryPoint.parse(\'%s\').load(False)'
+                % entry_point,
+                'app=Zope2.app()',
+                'func(app, sys.argv[1:])',
+            ])
+            cmdline = self.get_startup_cmd(
+                self.options.python, ' ; '.join(cmd))
+            self._exitstatus = os.system(cmdline)
+        return go
+
     def environment(self):
         configroot = self.options.configroot
         env = dict(os.environ)
@@ -415,13 +645,23 @@ class AdjustedZopeCmd(zopectl.ZopeCmd):
         # will act as escapes.  Use r'' instead.
         # Also, don't forget that 'python'
         # may have spaces and needs to be quoted.
+        if self.options.wsgi:
+            cmd = (
+                "from Zope2.Startup.run import configure_wsgi; "
+                "configure_wsgi(r'%s'); "
+                "import Zope2; app=Zope2.app(); "
+            )
+        else:
+            cmd = (
+                "from Zope2 import configure; "
+                "configure(r'%s'); "
+                "import Zope2; app=Zope2.app(); "
+            )
         cmdline = (
-            '"%s" %s %s -c "from Zope2 import configure; '
-            'configure(r\'%s\'); '
-            'import Zope2; app=Zope2.app(); ' % (
+            '"%s" %s %s -c "%s' % (
                 python, pyflags,
                 pyflags,
-                self.options.configfile
+                cmd % self.options.configfile,
             )
         )
 
@@ -460,7 +700,7 @@ class AdjustedZopeCmd(zopectl.ZopeCmd):
             cmdline += login_cmdline
 
         cmdline = cmdline + more + '\"'
-        if zopectl.WIN:
+        if WINDOWS:
             # entire command line must be quoted
             # as well as the components
             return '"%s"' % cmdline
@@ -503,23 +743,32 @@ class AdjustedZopeCmd(zopectl.ZopeCmd):
             print("usage: run <script> [args]")
             return
 
-        # If we pass the script filename as a win32 backslashed path
-        # using a ''-style string, the backslashes will act as
-        # escapes.  Use r'' instead.
-        #
         # Remove -c and add script as sys.argv[0]
         script = tup[0]
-        cmd = 'import sys; sys.argv.pop(); sys.argv.append(r\'%s\'); ' % script
+        cmd = [
+            "import sys",
+            "sys.argv.pop()",
+            "sys.argv.append(%r)" % script,
+        ]
         if len(tup) > 1:
             argv = tup[1:]
-            cmd += '[sys.argv.append(x) for x in %s]; ' % argv
-        cmd += 'execfile(r\'%s\')' % script
-        cmdline = self.get_startup_cmd(self.options.python, cmd)
+            cmd.append('[sys.argv.append(x) for x in %s]' % argv)
+        cmd.extend([
+            "f = open(%r)" % script,
+            "src = f.read()",
+            "f.close()",
+            "code = compile(src, filename=%r, mode='exec')" % script,
+            "exec(code)",
+        ])
+        cmdline = self.get_startup_cmd(self.options.python, "; ".join(cmd))
 
         self._exitstatus = os.system(cmdline)
 
     def help_run(self):
-        zopectl.ZopeCmd.help_run(self)
+        print("run <script> [args] -- run a Python script with the Zope ")
+        print("                       environment set up. The script can use ")
+        print("                       the name 'app' access the top-level ")
+        print("                       Zope object")
         self.help_startup_command()
 
     def do_console(self, arg):
@@ -547,7 +796,8 @@ console -- Run the program in the console.
         os.system(cmdline)
 
     def help_debug(self):
-        zopectl.ZopeCmd.help_debug(self)
+        print("debug -- run the Zope debugger to inspect your database")
+        print("         manually using a Python interactive shell")
         self.help_startup_command()
 
     def do_foreground(self, arg, debug=True):
@@ -566,13 +816,19 @@ console -- Run the program in the console.
         local_additions = []
 
         if debug:
-            if not program.count('-X'):
-                local_additions += ['-X']
+            if self.options.wsgi:
+                debug_switch = '-d'
+                if 'PYTHONWARNINGS' not in env:
+                    env['PYTHONWARNINGS'] = 'on'
+            else:
+                debug_switch = '-X'
+            if not program.count(debug_switch):
+                local_additions += [debug_switch]
             if not program.count('debug-mode=on'):
                 local_additions += ['debug-mode=on']
             program.extend(local_additions)
 
-        if zopectl.WIN:
+        if WINDOWS:
             # The outer quotes were causing
             # "WindowsError: [Error 87] The parameter is incorrect"
             # command = zopectl.quote_command(program)
@@ -580,7 +836,7 @@ console -- Run the program in the console.
         else:
             command = program
 
-        if debug or zopectl.WIN:
+        if debug or WINDOWS:
             try:
                 self._exitstatus = subprocess.call(command, env=env)
             except KeyboardInterrupt:
@@ -601,24 +857,101 @@ console -- Run the program in the console.
               "bin/test -s <my.package>")
         return
 
+    def do_adduser(self, arg):
+        try:
+            name, password = arg.split()
+        except Exception:
+            print("usage: adduser <name> <password>")
+            return
+        cmdline = self.get_startup_cmd(
+            self.options.python,
+            'import Zope2; '
+            'app = Zope2.app(); '
+            'result = app.acl_users._doAddUser('
+            '\'%s\', \'%s\', [\'Manager\'], []); '
+            'import transaction; '
+            'transaction.commit(); '
+            'print(\'Created user:\', result)'
+        ) % (name, password)
+        os.system(cmdline)
+
+    def help_adduser(self):
+        print("adduser <name> <password> -- add a Zope management user")
+
+
+def serve_paste(app, global_conf, **kw):
+    sock = None
+    if 'prebound' in global_conf:
+        _sock = socket.fromfd(
+            int(global_conf['prebound']), socket.AF_INET, socket.SOCK_STREAM)
+        if six.PY2:
+            sock = socket.socket()
+            sock._sock = _sock
+        else:
+            sock = _sock
+        kw.update(sockets=[sock])
+    try:
+        waitress.serve(app, **kw)
+    finally:
+        if isinstance(sock, socket.socket):
+            sock.close()
+    return 0
+
+
+def server_factory(global_conf, **kws):
+    if 'fast-listen' in kws:
+        host, port = kws['fast-listen'].split(':')
+        prebound = dispatcher()
+        prebound.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        prebound.set_reuse_addr()
+        prebound.bind((host, int(port)))
+        prebound.listen(5)
+        while not prebound.readable():
+            sleep(1)
+        global_conf.update(prebound=str(prebound.socket.fileno()))
+        del kws['fast-listen']
+    del kws['paste.server_factory']
+
+    def serve(app):
+        return serve_paste(app, global_conf, **kws)
+    return serve
+
 
 def main(args=None):
     """Customized entry point for launching Zope without forking other processes
     """
 
-    options = zopectl.ZopeCtlOptions()
+    if '--wsgi' in args or '-w' in args:
+        options = WSGICtlOptions()
+    else:
+        options = ZServerCtlOptions()
     options.add(name="no_request", short="R", long="no-request", flag=1)
     options.add(name="no_login", short="L", long="no-login", flag=1)
     options.add(name="object_path", short="O:", long="object-path=")
+    options.add(name="wsgi", short='w:', long='wsgi=')
     # Realize arguments and set documentation which is used in the -h option
+    options.required_map = {}  # XXX: program should not be required with -C
     options.realize(args, doc=__doc__)
 
-    # Change the program to avoid warning messages
-    options.program = [
-        options.python, '-m', 'Zope2.Startup.run', '-C', options.configfile]
+    if options.wsgi is not None and \
+       options.wsgi.lower() in ('off', 'false', '0'):
+        options.wsgi = None
 
-    # We use our own ZopeCmd set, that is derived from the original one.
-    c = AdjustedZopeCmd(options)
+    if not options.wsgi:
+        # only use zserver in Python 2 and if wsgi is disabled
+        options.program = [
+            options.python, '-m', 'ZServer.Zope2.Startup.run', '-C',
+            options.configfile
+        ]
+    else:
+        # wsgi is the default
+        from Zope2.Startup import serve
+        script = os.path.join(os.path.dirname(serve.__file__), 'serve.py')
+        options.program = [
+            options.python, script, options.wsgi
+        ]
+
+    c = ZopeCmd(options)
 
     # Mix in any additional commands supplied by other packages:
     for ep in iter_entry_points('plone.recipe.zope2instance.ctl'):
@@ -648,8 +981,7 @@ def main(args=None):
     # If no command was specified: enter interactive mode.
 
     try:
-        import readline
-        assert readline
+        import readline  # noqa
     except ImportError:
         pass
     print('Program: {}'.format(' '.join(options.program)))
