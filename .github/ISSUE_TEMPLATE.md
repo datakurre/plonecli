@@ -1,4 +1,4 @@
-* Plone CLI version:
+* Plone CTL version:
 * Python version:
 * Operating System:
 

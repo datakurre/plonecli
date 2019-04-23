@@ -8,13 +8,13 @@ include *.py
 include *.sh
 include *.txt
 include *.rst
-include plonecli_autocomplete.sh
+include plonectl_autocomplete.sh
 include Makefile
 include tox.ini
 recursive-include docs *.svg
 
 recursive-include tests *
-recursive-include plonecli *
+recursive-include plonectl *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 

@@ -36,7 +36,7 @@ History
 - Show deprecate flag and info for templates in template list
   [MrTango]
 
-- Use the now released click library in version >= 7.0, you have to uninstall plonecli-click before upgrading!
+- Use the now released click library in version >= 7.0, you have to uninstall plonectl-click before upgrading!
   [MrTango]
 
 0.2.2 (2018-08-13)
@@ -52,7 +52,7 @@ History
 0.2.1 (2018-07-09)
 ------------------
 
-- Add plonecli config command to configure mrbob's global user settings
+- Add plonectl config command to configure mrbob's global user settings
   [kakshay21]
 
 - Add versions -V/--versions command
@@ -65,7 +65,7 @@ History
 0.2.0 (2018-04-03)
 ------------------
 
-- Add test command to allow running test from plonecli
+- Add test command to allow running test from plonectl
   [MrTango]
 
 
@@ -96,7 +96,7 @@ History
 0.1.1b4 (2018-03-26)
 --------------------
 
-- Use a forked version of click library (plonecli-click) as dependency for now
+- Use a forked version of click library (plonectl-click) as dependency for now
   [MrTango]
 
 
@@ -125,7 +125,7 @@ History
 0.1.0a4 (2017-10-30)
 --------------------
 
-- provide plonecli_autocomplete.sh for bash autocompletion
+- provide plonectl_autocomplete.sh for bash autocompletion
   [MrTango]
 - fix depency to bobtemplates.plone, we need >=3.0.0a3
   [MrTango]

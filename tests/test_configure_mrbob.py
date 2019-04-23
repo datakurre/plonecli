@@ -3,9 +3,9 @@
 from __future__ import absolute_import
 from mrbob.configurator import Configurator
 from mrbob.configurator import SkipQuestion
-from plonecli.configure_mrbob import check_git_disabled
-from plonecli.configure_mrbob import get_mrbob_config_variable
-from plonecli.configure_mrbob import post_render
+from plonectl.configure_mrbob import check_git_disabled
+from plonectl.configure_mrbob import get_mrbob_config_variable
+from plonectl.configure_mrbob import post_render
 
 import os.path
 import pytest
@@ -18,7 +18,7 @@ def generate_answers_ini(path, template, filename):
 
 def test_check_git_disabled_true(tmpdir):
     configurator = Configurator(
-        template='plonecli:configure_mrbob',
+        template='plonectl:configure_mrbob',
         target_directory=tmpdir.strpath,
         bobconfig={
             'non_interactive': True,
@@ -36,7 +36,7 @@ def test_check_git_disabled_true(tmpdir):
 
 def test_check_git_disabled_false(tmpdir):
     configurator = Configurator(
-        template='plonecli:configure_mrbob',
+        template='plonectl:configure_mrbob',
         target_directory=tmpdir.strpath,
         bobconfig={
             'non_interactive': True,
@@ -174,9 +174,9 @@ plone.version = 5.1
     assert '5.1' == get_mrbob_config_variable('plone.version', tmpdir.strpath)
 
 
-def test_plonecli_config_without_config_file(tmpdir):
+def test_plonectl_config_without_config_file(tmpdir):
     configurator = Configurator(
-        template='plonecli:configure_mrbob',
+        template='plonectl:configure_mrbob',
         target_directory=tmpdir.strpath,
         bobconfig={
             'non_interactive': True,
@@ -208,7 +208,7 @@ plone.version = 5.1
         assert content != template
 
 
-def test_plonecli_config_with_config_file(tmpdir):
+def test_plonectl_config_with_config_file(tmpdir):
     template = """[mr.bob]
 verbose = False
 [variables]
@@ -224,7 +224,7 @@ plone.version = 5.1
         f.write(template)
 
     configurator = Configurator(
-        template='plonecli:configure_mrbob',
+        template='plonectl:configure_mrbob',
         target_directory=tmpdir.strpath,
         bobconfig={
             'non_interactive': True,
@@ -245,7 +245,7 @@ plone.version = 5.1
         assert 'XYZ' in content
 
 
-def test_plonecli_config_with_comments(tmpdir):
+def test_plonectl_config_with_comments(tmpdir):
     template = """[mr.bob]
 verbose = False
 [variables]
@@ -261,7 +261,7 @@ plone.version = 5.1
         f.write(template)
 
     configurator = Configurator(
-        template='plonecli:configure_mrbob',
+        template='plonectl:configure_mrbob',
         target_directory=tmpdir.strpath,
         bobconfig={
             'non_interactive': True,
@@ -282,7 +282,7 @@ plone.version = 5.1
         assert '#author.github.user' in content
 
 
-def test_plonecli_config_with_other_tags(tmpdir):
+def test_plonectl_config_with_other_tags(tmpdir):
     template = """[mr.bob]
 verbose = False
 [defaults]
@@ -298,7 +298,7 @@ plone.version = 5.1
         f.write(template)
 
     configurator = Configurator(
-        template='plonecli:configure_mrbob',
+        template='plonectl:configure_mrbob',
         target_directory=tmpdir.strpath,
         bobconfig={
             'non_interactive': True,

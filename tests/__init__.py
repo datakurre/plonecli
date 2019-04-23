@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-"""Unit test package for plonecli."""
+"""Unit test package for plonectl."""

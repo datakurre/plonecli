@@ -6,8 +6,8 @@ import sys
 
 
 @pytest.fixture(scope='module')
-def plonecli_bin():
+def plonectl_bin():
     bin_path = os.path.abspath(os.path.dirname(sys.argv[0]))
-    plonecli_bin = bin_path + '/plonecli'
-    print('plonebin path: ' + plonecli_bin)
-    yield plonecli_bin
+    plonectl_bin = bin_path + '/plonectl'
+    print('plonebin path: ' + plonectl_bin)
+    yield plonectl_bin

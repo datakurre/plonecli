@@ -64,8 +64,8 @@ target/
 
 # pyenv python configuration file
 .python-version
-/plonecli.sublime-project
-/plonecli.sublime-workspace
+/plonectl.sublime-project
+/plonectl.sublime-workspace
 /tmp
 /local
 /src/*

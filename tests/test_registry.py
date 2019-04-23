@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Tests for `plonecli` package."""
+"""Tests for `plonectl` package."""
 
 from __future__ import absolute_import
-from plonecli.registry import get_package_root
-from plonecli.registry import read_bob_config
-from plonecli.registry import TemplateRegistry
+from plonectl.registry import get_package_root
+from plonectl.registry import read_bob_config
+from plonectl.registry import TemplateRegistry
 
 import os
 
@@ -104,9 +104,9 @@ def test_get_templates(tmpdir):
 
 
 def test_resolve_template_name(tmpdir):
-    """ test resolving template names from plonecli alias
+    """ test resolving template names from plonectl alias
     """
-    plonecli_alias = 'addon'
+    plonectl_alias = 'addon'
     reg = TemplateRegistry()
-    template_name = reg.resolve_template_name(plonecli_alias)
+    template_name = reg.resolve_template_name(plonectl_alias)
     assert 'bobtemplates.plone:addon' == template_name

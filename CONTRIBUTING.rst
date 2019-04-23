@@ -15,7 +15,7 @@ Types of Contributions
 Report Bugs
 ~~~~~~~~~~~
 
-Report bugs at https://github.com/plone/plonecli/issues.
+Report bugs at https://github.com/plone/plonectl/issues.
 
 If you are reporting a bug, please include:
 
@@ -38,14 +38,14 @@ and "help wanted" is open to whoever wants to implement it.
 Write Documentation
 ~~~~~~~~~~~~~~~~~~~
 
-Plone CLI could always use more documentation, whether as part of the
-official Plone CLI docs, in docstrings, or even on the web in blog posts,
+Plone CTL could always use more documentation, whether as part of the
+official Plone CTL docs, in docstrings, or even on the web in blog posts,
 articles, and such.
 
 Submit Feedback
 ~~~~~~~~~~~~~~~
 
-The best way to send feedback is to file an issue at https://github.com/plone/plonecli/issues.
+The best way to send feedback is to file an issue at https://github.com/plone/plonectl/issues.
 
 If you are proposing a feature:
 
@@ -57,13 +57,13 @@ If you are proposing a feature:
 Get Started!
 ------------
 
-Ready to contribute? Here's how to set up `plonecli` for local development.
+Ready to contribute? Here's how to set up `plonectl` for local development.
 
 1. Clone the repo locally::
 
-    $ git clone git@github.com:plone/plonecli.git
+    $ git clone git@github.com:plone/plonectl.git
 
-2. Create a branch of the `plonecli` repo::
+2. Create a branch of the `plonectl` repo::
 
     $ git checkout -b yourgithubuser_topic
 

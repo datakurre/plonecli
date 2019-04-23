@@ -13,10 +13,10 @@ test_requirements = [
 
 setup(
     # metadata see setup.cfg
-    packages=find_packages(include=['plonecli']),
+    packages=find_packages(include=['plonectl']),
     entry_points={
         'console_scripts': [
-            'plonecli=plonecli.cli:cli',
+            'plonectl=plonectl.cli:cli',
         ],
     },
     include_package_data=True,
@@ -36,8 +36,8 @@ setup(
         ],
     },
     zip_safe=False,
-    keywords='plonecli',
-    scripts=['plonecli_autocomplete.sh'],
+    keywords='plonectl',
+    scripts=['plonectl_autocomplete.sh'],
     test_suite='tests',
     tests_require=test_requirements,
     setup_requires=['pytest-runner'],

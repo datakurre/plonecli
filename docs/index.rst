@@ -1,5 +1,5 @@
 ======================================
-Welcome To Plone CLI's Documentation !
+Welcome To Plone CTL's Documentation !
 ======================================
 
 Contents:

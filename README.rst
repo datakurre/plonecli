@@ -1,88 +1,88 @@
-.. image:: https://secure.travis-ci.org/plone/plonecli.png?branch=master
-    :target: http://travis-ci.org/plone/plonecli
+.. image:: https://secure.travis-ci.org/plone/plonectl.png?branch=master
+    :target: http://travis-ci.org/plone/plonectl
 
-.. image:: https://coveralls.io/repos/github/plone/plonecli/badge.svg?branch=master
-    :target: https://coveralls.io/github/plone/plonecli?branch=master
+.. image:: https://coveralls.io/repos/github/plone/plonectl/badge.svg?branch=master
+    :target: https://coveralls.io/github/plone/plonectl?branch=master
     :alt: Coveralls
 
-.. image:: https://img.shields.io/pypi/v/plonecli.svg
-    :target: https://pypi.python.org/pypi/plonecli/
+.. image:: https://img.shields.io/pypi/v/plonectl.svg
+    :target: https://pypi.python.org/pypi/plonectl/
     :alt: Latest Version
 
 .. image:: https://img.shields.io/pypi/pyversions/bobtemplates.plone.svg?style=plastic
     :alt: PyPI - Python Version
 
 =========
-Plone CLI
+Plone CTL
 =========
 
-.. image:: https://github.com/plone/plonecli/blob/master/docs/plone_cli_logo.svg
+.. image:: https://github.com/plone/plonectl/blob/master/docs/plone_cli_logo.svg
 
 
-**A Plone CLI for creating Plone packages**
+**A Plone CTL for creating Plone packages**
 
-*The Plone CLI is meant for developing Plone packages, we will not add functions to install or run Plone in production. For this we should build another package, let's say *plonectl* which will provide installing and deployment functions. It also support's GIT by default, to keep track of changes one is doing with the templates.*
+*The Plone CTL is meant for developing Plone packages, we will not add functions to install or run Plone in production. For this we should build another package, let's say *plonectl* which will provide installing and deployment functions. It also support's GIT by default, to keep track of changes one is doing with the templates.*
 
 
 Installation
 ============
 
-We install plonecli in the global user site-packages, so that we can use it in multible projects.
+We install plonectl in the global user site-packages, so that we can use it in multible projects.
 
 Versions newer than 0.1.1b4 are installable like any other package with pip:
 
 .. code-block:: console
 
-    $ pip install plonecli --user
-    $ plonecli -l
+    $ pip install plonectl --user
+    $ plonectl -l
 
-To upgrade plonecli just do:
+To upgrade plonectl just do:
 
 .. code-block:: console
 
-    $ pip install -U plonecli --user
+    $ pip install -U plonectl --user
     Note: Make sure that the install directory is in $PATH ( e.g. export PATH=$PATH:$HOME/.local/bin/  )
 
 NOTE:
-We are now using a the ORIGINAL version of the CLICK library, please uninstall plonecli-click before you install the new version of plonecli.
+We are now using a the ORIGINAL version of the CLICK library, please uninstall plonectl-click before you install the new version of plonectl.
 
-If would like to use plonecli with pipenv, you can do it as follow:
+If would like to use plonectl with pipenv, you can do it as follow:
 
 .. code-block:: console
 
     $ mkdir cli
     $ cd cli
-    $ pipenv install plonecli
+    $ pipenv install plonectl
     $ pipenv shell
-    $ plonecli -l
+    $ plonectl -l
 
 
 Bash Auto Completion
 --------------------
 
-To enable auto completion plonecli provides the plonecli_autocomplete.sh script, put the following bash command into your bashrc:
+To enable auto completion plonectl provides the plonectl_autocomplete.sh script, put the following bash command into your bashrc:
 
-If you installed plonecli in user global packages:
-
-.. code-block:: console
-
-    $ . ~/.local/bin/plonecli_autocomplete.sh
-
-
-If you installed plonecli in a virtualenv it's:
+If you installed plonectl in user global packages:
 
 .. code-block:: console
 
-    $ . /path/to/your/virtualenv/bin/plonecli_autocomplete.sh
+    $ . ~/.local/bin/plonectl_autocomplete.sh
 
 
-If you used pipenv to install plonecli, you have to find out the path to the virtualenv before:
+If you installed plonectl in a virtualenv it's:
+
+.. code-block:: console
+
+    $ . /path/to/your/virtualenv/bin/plonectl_autocomplete.sh
+
+
+If you used pipenv to install plonectl, you have to find out the path to the virtualenv before:
 
 .. code-block:: console
 
     $ pipenv --virtualenv
     /home/maik/.local/share/virtualenvs/pe-WnXOnVWH
-    . /home/maik/.local/share/virtualenvs/pe-WnXOnVWH/bin/plonecli_autocomplete.sh
+    . /home/maik/.local/share/virtualenvs/pe-WnXOnVWH/bin/plonectl_autocomplete.sh
 
 
 Documentation
@@ -100,8 +100,8 @@ Available Commands
 
 .. code-block:: console
 
-    $ plonecli --help
-    Usage: plonecli [OPTIONS] COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]...
+    $ plonectl --help
+    Usage: plonectl [OPTIONS] COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]...
 
       Plone Command Line Interface (CLI)
 
@@ -127,7 +127,7 @@ Creating A Plone Add-on
 
 .. code-block:: console
 
-    $ plonecli -l
+    $ plonectl -l
     Available mr.bob templates:
     - addon
      - behavior
@@ -141,7 +141,7 @@ Creating A Plone Add-on
     - buildout
     - theme_package [deprecated] >> Please use the theme_barceloneta subtemplate!
 
-    $ plonecli create addon src/collective.todo
+    $ plonectl create addon src/collective.todo
 
 
 Adding Features To Your Plone Add-on
@@ -153,12 +153,12 @@ You can add different features thru subtemplates. You can use them also multible
 
     $ cd collective.todo
 
-    $ plonecli add behavior
-    $ plonecli add content_type
-    $ plonecli add theme
-    $ plonecli add view
-    $ plonecli add viewlet
-    $ plonecli add vocabulary
+    $ plonectl add behavior
+    $ plonectl add content_type
+    $ plonectl add theme
+    $ plonectl add view
+    $ plonectl add viewlet
+    $ plonectl add vocabulary
 
 
 Build Your Package
@@ -166,7 +166,7 @@ Build Your Package
 
 .. code-block:: console
 
-    $ plonecli build
+    $ plonectl build
 
 This will run:
 
@@ -188,7 +188,7 @@ Run Your Application
 
 .. code-block:: console
 
-    $ plonecli serve
+    $ plonectl serve
 
 
 Run Tests for Application
@@ -196,19 +196,19 @@ Run Tests for Application
 
 .. code-block:: console
 
-    $ plonecli test
+    $ plonectl test
 
 or run specific tests:
 
 .. code-block:: console
 
-    $ plonecli test -t test_the_thing
+    $ plonectl test -t test_the_thing
 
 or run all tests including Robot tests:
 
 .. code-block:: console
 
-    $ plonecli test --all
+    $ plonectl test --all
 
 
 Combining Commands
@@ -218,7 +218,7 @@ You can combine the steps above like this:
 
 .. code-block:: console
 
-    $ plonecli create addon src/collective.todo build test --all serve
+    $ plonectl create addon src/collective.todo build test --all serve
 
 
 Developer Guide
@@ -229,13 +229,13 @@ Setup Developer Environment
 
 .. code-block:: console
 
-    $ git clone https://github.com/plone/plonecli/
-    $ cd plonecli
+    $ git clone https://github.com/plone/plonectl/
+    $ cd plonectl
     $ virtualenv .
     $ source bin/activate
     $ pip install -r requirements.txt
     $ python setup.py develop
-    $ plonecli --help
+    $ plonectl --help
 
 
 Running Tests
@@ -263,7 +263,7 @@ or a single test:
 Register Your Bobtemplates Package For Plonecli
 -----------------------------------------------
 
-All mr.bob templates can be registered for plonecli by adding an entry_point to your setup.py.
+All mr.bob templates can be registered for plonectl by adding an entry_point to your setup.py.
 
 Here are the entry_points of the bobtemplates.plone package:
 
@@ -290,7 +290,7 @@ You also need to provide a bobregistry.py file with a method for each entry_poin
     class RegEntry(object):
         def __init__(self):
             self.template = ''
-            self.plonecli_alias = ''
+            self.plonectl_alias = ''
             self.depend_on = None
             self.deprecated = False
             self.info = ''
@@ -300,7 +300,7 @@ You also need to provide a bobregistry.py file with a method for each entry_poin
     def plone_addon():
         reg = RegEntry()
         reg.template = 'bobtemplates.plone:addon'
-        reg.plonecli_alias = 'addon'
+        reg.plonectl_alias = 'addon'
         return reg
 
 
@@ -308,14 +308,14 @@ You also need to provide a bobregistry.py file with a method for each entry_poin
     def plone_theme():
         reg = RegEntry()
         reg.template = 'bobtemplates.plone:theme'
-        reg.plonecli_alias = 'theme'
+        reg.plonectl_alias = 'theme'
         reg.depend_on = 'plone_addon'
         return reg
 
 For every template you add a line to the entry_points and define a method in the bobregistry.py, which will return a registry object with some properties.
 
 - ``template`` - contains the name of the actual mr.bob template.
-- ``plonecli_alias`` - defines the name under which the template will be used inside plonecli
+- ``plonectl_alias`` - defines the name under which the template will be used inside plonectl
 - ``depend_on``:
     1. for a standalone template, the depend_on property is None
     2. for a sub template, the depend_on contains the name of the parent standalone template, usualy `addon`.
@@ -326,8 +326,8 @@ For every template you add a line to the entry_points and define a method in the
 Contribute
 ==========
 
-- Issue Tracker: https://github.com/plone/plonecli/issues
-- Source Code: https://github.com/plone/plonecli
+- Issue Tracker: https://github.com/plone/plonectl/issues
+- Source Code: https://github.com/plone/plonectl
 
 
 License

@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Tests for `plonecli` package."""
+"""Tests for `plonectl` package."""
 
 from __future__ import absolute_import
 from click.testing import CliRunner
-from plonecli import cli
+from plonectl import cli
 
 import click
 import os
@@ -54,7 +54,7 @@ def test_command_line_interface():
     assert 'Available packages:' in version_result.output
 
 
-def test_plonecli_test():
+def test_plonectl_test():
     runner = CliRunner()
     template = """[main]
 version = 5.1-latest
@@ -113,7 +113,7 @@ git_init = y
         assert u'./bin/test --test  src/collective/todo/tests/test_robot.py --package  collective.todo --all' in test_command_result.output  # NOQA: E501
 
 
-def test_plonecli_build_default_py(tmpdir, plonecli_bin):
+def test_plonectl_build_default_py(tmpdir, plonectl_bin):
     target_path = tmpdir.strpath
     os.chdir(target_path)
     template = """
@@ -139,7 +139,7 @@ git_init = y
 
     result = subprocess.check_output(
         [
-            plonecli_bin,
+            plonectl_bin,
             'build',
         ],
         cwd=target_path,
@@ -148,7 +148,7 @@ git_init = y
 
 
 @pytest.mark.skipif(sys.version_info < (3, 7), reason="requires explicitly python3.7")
-def test_plonecli_build_py_option(tmpdir, plonecli_bin):
+def test_plonectl_build_py_option(tmpdir, plonectl_bin):
     target_path = tmpdir.strpath
     os.chdir(target_path)
     template = """
@@ -174,7 +174,7 @@ python = python3
 
     result = subprocess.check_output(
         [
-            plonecli_bin,
+            plonectl_bin,
             'build',
             '-p',
             'python3.7',
@@ -185,7 +185,7 @@ python = python3
 
 
 @pytest.mark.skipif(sys.version_info < (3, 0), reason="requires python3")
-def test_plonecli_build_py_conf(tmpdir, plonecli_bin):
+def test_plonectl_build_py_conf(tmpdir, plonectl_bin):
     target_path = tmpdir.strpath
     os.chdir(target_path)
     template = """
@@ -211,7 +211,7 @@ python = python3
 
     result = subprocess.check_output(
         [
-            plonecli_bin,
+            plonectl_bin,
             'build',
         ],
         cwd=target_path,
