@@ -19,9 +19,9 @@ Plone CTL
 .. image:: https://github.com/plone/plonectl/blob/master/docs/plone_cli_logo.svg
 
 
-**A Plone CTL for creating Plone packages**
+**A Plone CTL for running Plone sites**
 
-*The Plone CTL is meant for developing Plone packages, we will not add functions to install or run Plone in production. For this we should build another package, let's say *plonectl* which will provide installing and deployment functions. It also support's GIT by default, to keep track of changes one is doing with the templates.*
+*The Plone CTL is meant for run Plone in development and in production.*
 
 
 Installation
@@ -42,9 +42,6 @@ To upgrade plonectl just do:
 
     $ pip install -U plonectl --user
     Note: Make sure that the install directory is in $PATH ( e.g. export PATH=$PATH:$HOME/.local/bin/  )
-
-NOTE:
-We are now using a the ORIGINAL version of the CLICK library, please uninstall plonectl-click before you install the new version of plonectl.
 
 If would like to use plonectl with pipenv, you can do it as follow:
 
@@ -90,8 +87,6 @@ Documentation
 
 Full documentation for end users can be found in the "docs" folder, this will be available in the Plone docs at some point.
 
-*Note:* you can set default answers for mr.bob questions, see `bobtemplates.plone README <https://github.com/plone/bobtemplates.plone/#configuration>`_.
-
 Usage
 =====
 
@@ -111,114 +106,9 @@ Available Commands
       -h, --help            Show this message and exit.
 
     Commands:
-      build         Bootstrap and build the package
-      buildout      Run the package buildout
-      config        Configure mr.bob global settings
-      create        Create a new Plone package
-      debug         Run the Plone client in debug mode
-      requirements  Install the local package requirements
-      serve         Run the Plone client in foreground mode
-      test          Run the tests in your package
-      virtualenv    Create/update the local virtual environment...
-
-
-Creating A Plone Add-on
------------------------
-
-.. code-block:: console
-
-    $ plonectl -l
-    Available mr.bob templates:
-    - addon
-     - behavior
-     - content_type
-     - portlet
-     - theme
-     - theme_barceloneta
-     - view
-     - viewlet
-     - vocabulary
-    - buildout
-    - theme_package [deprecated] >> Please use the theme_barceloneta subtemplate!
-
-    $ plonectl create addon src/collective.todo
-
-
-Adding Features To Your Plone Add-on
-------------------------------------
-
-You can add different features thru subtemplates. You can use them also multible time to create different features of the same typ, like two different content types.
-
-.. code-block:: console
-
-    $ cd collective.todo
-
-    $ plonectl add behavior
-    $ plonectl add content_type
-    $ plonectl add theme
-    $ plonectl add view
-    $ plonectl add viewlet
-    $ plonectl add vocabulary
-
-
-Build Your Package
-------------------
-
-.. code-block:: console
-
-    $ plonectl build
-
-This will run:
-
-.. code-block::
-
-    $ virtualenv .
-    $ ./bin/pip install -r requirements.txt --upgrade
-    $ ./bin/buildout
-
-in your target directory.
-
-You can always run the 3 steps explicit by using ``virtualenv``,``requirements``, ``buildout`` instead of build.
-If you want to reset your build use the ``--clean`` option on build.
-This will clear your virtualenv before installing the requirements and also running buildout with ``-n`` to get the newest versions.
-
-
-Run Your Application
---------------------
-
-.. code-block:: console
-
-    $ plonectl serve
-
-
-Run Tests for Application
--------------------------
-
-.. code-block:: console
-
-    $ plonectl test
-
-or run specific tests:
-
-.. code-block:: console
-
-    $ plonectl test -t test_the_thing
-
-or run all tests including Robot tests:
-
-.. code-block:: console
-
-    $ plonectl test --all
-
-
-Combining Commands
-------------------
-
-You can combine the steps above like this:
-
-.. code-block:: console
-
-    $ plonectl create addon src/collective.todo build test --all serve
+      instance
+      zeoserver
+      zeopack
 
 
 Developer Guide
@@ -259,68 +149,6 @@ or a single test:
 
     $ py.test test/ -k test_get_package_root
 
-
-Register Your Bobtemplates Package For Plonecli
------------------------------------------------
-
-All mr.bob templates can be registered for plonectl by adding an entry_point to your setup.py.
-
-Here are the entry_points of the bobtemplates.plone package:
-
-.. code-block:: python
-
-    entry_points={
-        'mrbob_templates': [
-            'plone_addon = bobtemplates.plone.bobregistry:plone_addon',
-            'plone_buildout = bobtemplates.plone.bobregistry:plone_buildout',  # NOQA E501
-            'plone_theme_package = bobtemplates.plone.bobregistry:plone_theme_package',  # NOQA E501
-            'plone_content_type = bobtemplates.plone.bobregistry:plone_content_type',  # NOQA E501
-            'plone_theme = bobtemplates.plone.bobregistry:plone_theme',
-            'plone_vocabulary = bobtemplates.plone.bobregistry:plone_vocabulary',  # NOQA E501
-        ],
-    },
-
-The entry_point name is used as the global template name for mr.bob.
-You also need to provide a bobregistry.py file with a method for each entry_point, it should be named after the entry_point name:
-
-.. code-block:: python
-
-    # -*- coding: utf-8 -*-
-
-    class RegEntry(object):
-        def __init__(self):
-            self.template = ''
-            self.plonectl_alias = ''
-            self.depend_on = None
-            self.deprecated = False
-            self.info = ''
-
-
-    # standalone template
-    def plone_addon():
-        reg = RegEntry()
-        reg.template = 'bobtemplates.plone:addon'
-        reg.plonectl_alias = 'addon'
-        return reg
-
-
-    # sub template
-    def plone_theme():
-        reg = RegEntry()
-        reg.template = 'bobtemplates.plone:theme'
-        reg.plonectl_alias = 'theme'
-        reg.depend_on = 'plone_addon'
-        return reg
-
-For every template you add a line to the entry_points and define a method in the bobregistry.py, which will return a registry object with some properties.
-
-- ``template`` - contains the name of the actual mr.bob template.
-- ``plonectl_alias`` - defines the name under which the template will be used inside plonectl
-- ``depend_on``:
-    1. for a standalone template, the depend_on property is None
-    2. for a sub template, the depend_on contains the name of the parent standalone template, usualy `addon`.
-- ``deprecated`` - boolean saying whether this templates is deprecated and will be removed in future releases
-- ``info`` - message that will be shown next to the template when the template is deprecated
 
 
 Contribute

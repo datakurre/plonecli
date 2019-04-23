@@ -4,6 +4,6 @@
 import pkg_resources
 
 
-__author__ = """Maik Derstappen"""
-__email__ = 'md@derico.de'
+__author__ = """Asko Soukka"""
+__email__ = 'asko.soukka@iki.fi'
 __version__ = pkg_resources.require('plonectl')[0].version
