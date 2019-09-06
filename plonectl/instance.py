@@ -33,7 +33,6 @@ from waitress.wasyncore import dispatcher
 from ZConfig.loader import SchemaLoader
 from zdaemon.zdctl import ZDCmd, ZDCtlOptions
 from zdaemon.zdoptions import ZDOptions
-import Zope2.Startup.run
 from Zope2.Startup.options import ConditionalSchemaParser
 import csv
 import os
