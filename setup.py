@@ -22,11 +22,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'setuptools',
-        'virtualenv',
         'Click>=7.0',
-        'mr.bob',
-        'zest.releaser',
-        'bobtemplates.plone>=4.0.3',
     ],
     extras_require={
         'test': test_requirements,

@@ -1,23 +1,6 @@
-.. image:: https://secure.travis-ci.org/plone/plonectl.png?branch=master
-    :target: http://travis-ci.org/plone/plonectl
-
-.. image:: https://coveralls.io/repos/github/plone/plonectl/badge.svg?branch=master
-    :target: https://coveralls.io/github/plone/plonectl?branch=master
-    :alt: Coveralls
-
-.. image:: https://img.shields.io/pypi/v/plonectl.svg
-    :target: https://pypi.python.org/pypi/plonectl/
-    :alt: Latest Version
-
-.. image:: https://img.shields.io/pypi/pyversions/bobtemplates.plone.svg?style=plastic
-    :alt: PyPI - Python Version
-
 =========
 Plone CTL
 =========
-
-.. image:: https://github.com/plone/plonectl/blob/master/docs/plone_cli_logo.svg
-
 
 **A Plone CTL for running Plone sites**
 
@@ -28,8 +11,6 @@ Installation
 ============
 
 We install plonectl in the global user site-packages, so that we can use it in multible projects.
-
-Versions newer than 0.1.1b4 are installable like any other package with pip:
 
 .. code-block:: console
 
@@ -82,11 +63,6 @@ If you used pipenv to install plonectl, you have to find out the path to the vir
     . /home/maik/.local/share/virtualenvs/pe-WnXOnVWH/bin/plonectl_autocomplete.sh
 
 
-Documentation
-=============
-
-Full documentation for end users can be found in the "docs" folder, this will be available in the Plone docs at some point.
-
 Usage
 =====
 
@@ -128,34 +104,33 @@ Setup Developer Environment
     $ plonectl --help
 
 
-Running Tests
--------------
+.. Running Tests
+.. -------------
 
-You can run the tests using the following command:
+.. You can run the tests using the following command:
 
-.. code-block:: console
+.. .. code-block:: console
 
-    $ tox
+..     $ tox
 
-or by installing py.test and run the test directly without tox:
+.. or by installing py.test and run the test directly without tox:
 
-.. code-block:: console
+.. .. code-block:: console
 
-    $ py.test test/
+..     $ py.test test/
 
-or a single test:
+.. or a single test:
 
-.. code-block:: console
+.. .. code-block:: console
 
-    $ py.test test/ -k test_get_package_root
-
+..     $ py.test test/ -k test_get_package_root
 
 
 Contribute
 ==========
 
-- Issue Tracker: https://github.com/plone/plonectl/issues
-- Source Code: https://github.com/plone/plonectl
+- Issue Tracker: https://github.com/datakurre/plonectl/issues
+- Source Code: https://github.com/datakurre/plonectl
 
 
 License
